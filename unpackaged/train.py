@@ -1,18 +1,14 @@
 """
 MIT License
-
-Copyright (c) 2020 Mahdi S. Hosseini
-
+Copyright (c) 2020 Mahdi S. Hosseini and Mathieu Tuli
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,8 +17,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from argparse import Namespace as APNamespace, \
-    _SubParsersAction, ArgumentParser
+from argparse import Namespace as APNamespace, _SubParsersAction
 from typing import Tuple
 from pathlib import Path
 
@@ -37,12 +32,13 @@ import yaml
 
 # from .test import main as test_main
 # from .utils import progress_bar
-from early_stop import EarlyStop
-from optim import get_optimizer_scheduler
-from metrics import Metrics
-from models import get_net
-from data import get_data
-from AdaS import AdaS
+from .optim import get_optimizer_scheduler
+from .early_stop import EarlyStop
+from .profiler import Profiler
+from .metrics import Metrics
+from .models import get_net
+from .data import get_data
+from .AdaS import AdaS
 
 
 net = None
@@ -146,7 +142,6 @@ def main(args: APNamespace):
                   "checkpoint dir")
             raise ValueError
         checkpoint_path.mkdir(exist_ok=True, parents=True)
-
     with config_path.open() as f:
         config = yaml.load(f)
     print("Adas: Argument Parser Options")
@@ -173,6 +168,17 @@ def main(args: APNamespace):
               f"{config['early_stop_threshold']}, training till completion.")
 
     for trial in range(config['n_trials']):
+        if config['lr_scheduler'] == 'AdaS':
+            filename = \
+                f"stats_{config['optim_method']}_AdaS_trial={trial}_" +\
+                f"beta={config['beta']}_initlr={config['init_lr']}_" +\
+                f"net={config['network']}_dataset={config['dataset']}.csv"
+        else:
+            filename = \
+                f"stats_{config['optim_method']}_{config['lr_scheduler']}_" +\
+                f"trial={trial}_initlr={config['init_lr']}" +\
+                f"net={config['network']}_dataset={config['dataset']}.csv"
+        Profiler.filename = output_path / filename
         device
         # Data
         # logging.info("Adas: Preparing Data")
@@ -239,16 +245,15 @@ def main(args: APNamespace):
         for epoch in epochs:
             start_time = time.time()
             # print(f"AdaS: Epoch {epoch}/{epochs[-1]} Started.")
-            train_loss, train_accuracy = epoch_iteration(
-                train_loader, epoch, device, optimizer, scheduler)
+            train_loss, train_accuracy, test_loss, test_accuracy = epoch_iteration(
+                train_loader, test_loader, epoch, device, optimizer, scheduler)
             end_time = time.time()
             if config['lr_scheduler'] == 'StepLR':
                 scheduler.step()
-            test_loss, test_accuracy = test_main(test_loader, epoch, device)
             total_time = time.time()
             print(
-                f"AdaS: Trial {trial + 1}/{config['n_trials']} | " +
-                f"Epoch {epoch + 1}/{epochs[-1] + 1} Ended | " +
+                f"AdaS: Trial {trial}/{config['n_trials'] - 1} | " +
+                f"Epoch {epoch}/{epochs[-1]} Ended | " +
                 "Total Time: {:.3f}s | ".format(total_time - start_time) +
                 "Epoch Time: {:.3f}s | ".format(end_time - start_time) +
                 "~Time Left: {:.3f}s | ".format(
@@ -274,6 +279,7 @@ def main(args: APNamespace):
             if early_stop(train_loss):
                 print("AdaS: Early stop activated.")
                 break
+    return
 
 
 def test_main(test_loader, epoch: int, device) -> Tuple[float, float]:
@@ -316,14 +322,17 @@ def test_main(test_loader, epoch: int, device) -> Tuple[float, float]:
         # else:
         #     torch.save(state, str(checkpoint_path))
         best_acc = acc
-    performance_statistics['acc_epoch_' + str(epoch)] = acc / 100
+    performance_statistics['test_acc_epoch_' + str(epoch)] = acc / 100
+    performance_statistics['test_loss_epoch' +
+                           str(epoch)] = test_loss / (batch_idx + 1)
     return test_loss / (batch_idx + 1), acc
 
 
-def epoch_iteration(train_loader, epoch: int,
+@Profiler
+def epoch_iteration(train_loader, test_loader, epoch: int,
                     device, optimizer, scheduler) -> Tuple[float, float]:
     # logging.info(f"Adas: Train: Epoch: {epoch}")
-    global net, performance_statistics, metrics, adas
+    global net, performance_statistics, metrics, adas, config
     net.train()
     train_loss = 0
     correct = 0
@@ -335,14 +344,23 @@ def epoch_iteration(train_loader, epoch: int,
         if config['lr_scheduler'] == 'CosineAnnealingWarmRestarts':
             scheduler.step(epoch + batch_idx / len(train_loader))
         optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
-        if adas is not None:
-            optimizer.step(metrics.layers_index_todo,
-                           adas.lr_vector)
+        if config['optim_method'] == 'SLS':
+            def closure():
+                outputs = net(inputs)
+                loss = criterion(outputs, targets)
+                return loss, outputs
+            loss, outputs = optimizer.step(closure=closure)
         else:
-            optimizer.step()
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+            if adas is not None:
+                optimizer.step(metrics.layers_index_todo,
+                               adas.lr_vector)
+            elif config['optim_method'] == 'SPS':
+                optimizer.step(loss=loss)
+            else:
+                optimizer.step()
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -355,7 +373,9 @@ def epoch_iteration(train_loader, epoch: int,
         #              'Loss: %.3f | Acc: %.3f%% (%d/%d)'
         #              % (train_loss / (batch_idx + 1),
         #                  100. * correct / total, correct, total))
-    performance_statistics['Train_loss_epoch_' +
+    performance_statistics['train_acc_epoch' +
+                           str(epoch)] = float(correct / total)
+    performance_statistics['train_loss_epoch_' +
                            str(epoch)] = train_loss / (batch_idx + 1)
 
     io_metrics = metrics.evaluate(epoch)
@@ -381,11 +401,12 @@ def epoch_iteration(train_loader, epoch: int,
                                str(epoch)] = lrmetrics.rank_velocity
         performance_statistics['learning_rate_' +
                                str(epoch)] = lrmetrics.r_conv
-    return train_loss / (batch_idx + 1), 100. * correct / total
+    else:
+        performance_statistics['learning_rate_' +
+                               str(epoch)] = optimizer.param_groups[0]['lr']
+    test_loss, test_accuracy = test_main(test_loader, epoch, device)
+    return train_loss / (batch_idx + 1), 100. * correct / total, test_loss, test_accuracy
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description=__doc__)
-    args(parser)
-    args = parser.parse_args()
-    main(args)
+    ...
