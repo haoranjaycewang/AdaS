@@ -39,7 +39,7 @@ from distutils import spawn
 import platform
 import os
 
-from .utils import safe_float_cast
+from utils import safe_float_cast
 
 
 class GPU:

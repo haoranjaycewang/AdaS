@@ -32,13 +32,13 @@ import yaml
 
 # from .test import main as test_main
 # from .utils import progress_bar
-from .optim import get_optimizer_scheduler
-from .early_stop import EarlyStop
-from .profiler import Profiler
-from .metrics import Metrics
-from .models import get_net
-from .data import get_data
-from .AdaS import AdaS
+from optim import get_optimizer_scheduler
+from early_stop import EarlyStop
+from profiler import Profiler
+from metrics import Metrics
+from models import get_net
+from data import get_data
+from AdaS import AdaS
 
 
 net = None

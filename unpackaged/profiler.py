@@ -8,9 +8,9 @@ import io
 
 from memory_profiler import memory_usage
 
-from .components import Statistics
-from .utils import pstats_to_dict
-from .gpu import GPU
+from components import Statistics
+from utils import pstats_to_dict
+from gpu import GPU
 
 
 class Profiler:
