@@ -14,11 +14,11 @@ from gpu import GPU
 
 
 class Profiler:
-    base_mem_used = GPU(1).mem_used
+    base_mem_used = GPU(0).mem_used
     filename: Path = Path('stats.csv')
 
     def __init__(self, function):
-        self.gpu = GPU(1)
+        self.gpu = GPU(0)
         self.stream = None
         self.pr = cProfile.Profile()
         self.function = function
