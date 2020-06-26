@@ -26,6 +26,7 @@ VGG11/13/16/19 in Pytorch.
 import torch
 import torch.nn as nn
 from torch.nn.modules.module import _addindent
+import numpy as np
 
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
