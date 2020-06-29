@@ -25,6 +25,8 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.modules.module import _addindent
+
 import numpy as np
 
 
@@ -112,7 +114,7 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
 
     tmpstr = tmpstr + ')'
     return tmpstr
-    
+
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
         super(ResNet, self).__init__()
