@@ -25,8 +25,6 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.modules.module import _addindent
-
 import numpy as np
 
 
@@ -88,32 +86,6 @@ class Bottleneck(nn.Module):
         out = F.relu(out)
         return out
 
-def torch_summarize(model, show_weights=True, show_parameters=True):
-    """Summarizes torch model by showing trainable parameters and weights."""
-    tmpstr = model.__class__.__name__ + ' (\n'
-    for key, module in model._modules.items():
-        # if it contains layers let call it recursively to get params and weights
-        if type(module) in [
-            torch.nn.modules.container.Container,
-            torch.nn.modules.container.Sequential
-        ]:
-            modstr = torch_summarize(module)
-        else:
-            modstr = module.__repr__()
-        modstr = _addindent(modstr, 2)
-
-        params = sum([np.prod(p.size()) for p in module.parameters()])
-        weights = tuple([tuple(p.size()) for p in module.parameters()])
-
-        tmpstr += '  (' + key + '): ' + modstr
-        if show_weights:
-            tmpstr += ', weights={}'.format(weights)
-        if show_parameters:
-            tmpstr +=  ', parameters={}'.format(params)
-        tmpstr += '\n'
-
-    tmpstr = tmpstr + ')'
-    return tmpstr
 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
@@ -121,37 +93,16 @@ class ResNet(nn.Module):
 
         #######################  O% ########################
         #self.index=[64,128,256,512]
-
         ####################### 20% #######################
-        self.index=[54,106,210,414]
-        #max output_s
-        #self.index=[54,106,212,414]
-        #max_averaged
-        #self.index=[54,106,212,414]
+        #self.index=[58,114,226,424]
         ####################### 40% #######################
-        #self.index=[44,84,164,316]
-        #max out_s
-        #self.index=[44,86,168,318]
-        #max_averaged
-        #self.index=[42,86,166,318]
+        #self.index=[52,100,196,338]
         ####################### 60% #######################
-        #self.index=[32,62,120,220]
-        #max out_s
-        #self.index=[34,64,122,220]
-        #max_averaged
-        #self.index=[32,64,122,220]
+        #self.index=[46,86,166,250]
         ####################### 80% #######################
-        #self.index=[32,40,74,122]
-        #max out_s
-        #self.index=[32,44,78,122]
-        #max_averaged
-        #self.index=[32,42,78,122]
+        #self.index=[40,72,136,164]
         ####################### 100% #######################
-        #self.index=[32,18,28,24]
-        #max out_s
-        #self.index=[32,22,34,26]
-        #max_averaged
-        #self.index=[32,20,34,24]
+        self.index=[34,58,106,76]
 
         self.in_planes = self.index[0]
         self.conv1 = nn.Conv2d(3, self.in_planes, kernel_size=3,
@@ -206,8 +157,7 @@ def ResNet152(num_classes: int = 10):
 
 def test():
     net = ResNet18()
-    print(torch_summarize(net))
     y = net(torch.randn(1, 3, 32, 32))
     print(y.size())
 
-test()
+#test()
