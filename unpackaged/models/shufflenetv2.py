@@ -204,8 +204,8 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
     return tmpstr
 
 def test():
-    net = ShuffleNetV2(net_size=0.5)
-    print(torch_summarize(net))
+    net = ShuffleNetV2(net_size=2.0)
+    #print(torch_summarize(net))
     x = torch.randn(3, 3, 32, 32)
     y = net(x)
 
@@ -217,4 +217,4 @@ def test():
     print(y.shape)
 
 
-test()
+#test()

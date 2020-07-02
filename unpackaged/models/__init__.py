@@ -52,6 +52,6 @@ def get_net(network: str, num_classes) -> torch.nn.Module:
         DPN92(num_classes=num_classes) if network == 'DPN92' else \
         ShuffleNetG2(num_classes=num_classes) if network == 'ShuffleNetG2' else \
         SENet18(num_classes=num_classes) if network == 'SENet18' else \
-        ShuffleNetV2(1, num_classes=num_classes) if network == 'ShuffleNetV2' else \
+        ShuffleNetV2(2, num_classes=num_classes) if network == 'ShuffleNetV2' else \
         EfficientNetB0(
             num_classes=num_classes) if network == 'EfficientNetB0' else None
