@@ -28,6 +28,7 @@ import torch.nn as nn
 from torch.nn.modules.module import _addindent
 import numpy as np
 from thop import profile
+from ptflops import get_model_complexity_info
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -100,8 +101,12 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
 def test():
     net = VGG('VGG16')
     x = torch.randn(2, 3, 32, 32)
-    macs, params = profile(net, inputs=(x, ))
+    #macs, params = profile(net, inputs=(x, ))
     #print(torch_summarize(net)) #old parameter counter
+    macs, params = get_model_complexity_info(net, x, as_strings=True,
+                                           print_per_layer_stat=True, verbose=True)
+    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
     y = net(x)
     print(y.size())
 
