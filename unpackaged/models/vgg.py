@@ -27,8 +27,9 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.module import _addindent
 import numpy as np
-from thop import profile
+
 from ptflops import get_model_complexity_info
+
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
@@ -71,42 +72,16 @@ class VGG(nn.Module):
         layers += [nn.AvgPool2d(kernel_size=1, stride=1)]
         return nn.Sequential(*layers)
 
-def torch_summarize(model, show_weights=True, show_parameters=True):
-    """Summarizes torch model by showing trainable parameters and weights."""
-    tmpstr = model.__class__.__name__ + ' (\n'
-    for key, module in model._modules.items():
-        # if it contains layers let call it recursively to get params and weights
-        if type(module) in [
-            torch.nn.modules.container.Container,
-            torch.nn.modules.container.Sequential
-        ]:
-            modstr = torch_summarize(module)
-        else:
-            modstr = module.__repr__()
-        modstr = _addindent(modstr, 2)
-
-        params = sum([np.prod(p.size()) for p in module.parameters()])
-        weights = tuple([tuple(p.size()) for p in module.parameters()])
-
-        tmpstr += '  (' + key + '): ' + modstr
-        if show_weights:
-            tmpstr += ', weights={}'.format(weights)
-        if show_parameters:
-            tmpstr +=  ', parameters={}'.format(params)
-        tmpstr += '\n'
-
-    tmpstr = tmpstr + ')'
-    return tmpstr
-
 def test():
     net = VGG('VGG16')
     x = torch.randn(2, 3, 32, 32)
-    #macs, params = profile(net, inputs=(x, ))
-    #print(torch_summarize(net)) #old parameter counter
-    macs, params = get_model_complexity_info(net, x, as_strings=True,
+
+    macs, params = get_model_complexity_info(net, (3,32,32), as_strings=True,
                                            print_per_layer_stat=True, verbose=True)
     print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
     print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+
+    
     y = net(x)
     print(y.size())
 
