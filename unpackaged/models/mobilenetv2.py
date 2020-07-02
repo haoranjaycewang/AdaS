@@ -1,3 +1,10 @@
+'''networks that are light, ~1 million
+run baseline and note accuracies.
+stepLR w/same learning_rate starting rate = 0.1
+FLOPs and MACs, number of learnable parameters, time spent for training,
+Number of learnable parameters.
+'''
+
 """
 MIT License
 
@@ -31,6 +38,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torchviz import make_dot, make_dot_from_trace
+
+import torch
+import torch.nn as nn
+from torch.nn.modules.module import _addindent
+import numpy as np
 
 class Block(nn.Module):
     #expand+depthwise+pointwise
@@ -70,6 +82,7 @@ class Block(nn.Module):
         x = x + self.shortcut(y) if (self.stride == 1) else x
         return x
 
+32, 14, 14, 8, 8, 10, 10, 16, 16, 16, 16, 16, 16, 16, 20, 22, 22, 20, 22, 22, 22, 22, 22, 38, 32, 32, 38, 40, 40, 38, 38, 38, 38, 46, 46, 54, 28, 50, 50, 28, 52, 52, 28, 64, 64, 64, 50, 50, 64, 80, 80, 64, 90, 90, 22, 18, 14
 class MobileNetV2(nn.Module):
     # (expansion, out_planes, num_blocks, stride)
     cfg = [(1,  16, 1, 1),
@@ -88,21 +101,20 @@ class MobileNetV2(nn.Module):
         #self.index=[32, 32, 32, (16,'shortcut'), 16, 96, 96, (24,'shortcut'), 24, 144, 144, 24, 144, 144, 32, 192, 192, 32, 192, 192, 32, 192, 192, 64, 384, 384, 64, 384, 384, 64, 384, 384, 64, 384, 384, (96,'shortcut'), 96, 576, 576, 96, 576, 576, 96, 576, 576, 160, 960, 960, 160, 960, 960, 160, 960, 960, (320,'shortcut'), 320, 1280]
         #self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
         ######################################## 20% ############################################
-        #self.index_ORIGINAL=[26, 26, 26, (14,'shortcut'), 14, 78, 78, (20,'shortcut'), 20, 116, 116, 20, 116, 116, 28, 156, 156, 28, 156, 156, 28, 156, 156, 56, 310, 310, 54, 310, 310, 54, 310, 310, 54, 310, 310, (80,'shortcut'), 80, 464, 464, 82, 464, 464, 80, 466, 466, 134, 772, 772, 134, 774, 774, 132, 774, 774, (258,'shortcut'), 258, 1026]
-        #self.index=[32, 26, 26, (14,'shortcut'), 14, 78, 78, (20,'shortcut'), 20, 116, 116, 20, 116, 116, 28, 156, 156, 28, 156, 156, 28, 156, 156, 56, 310, 310, 56, 310, 310, 56, 310, 310, 56, 310, 310, (80,'shortcut'), 80, 464, 464, 80, 464, 464, 80, 466, 466, 134, 772, 772, 134, 774, 774, 134, 774, 774, (258,'shortcut'), 258, 1026]
+        #self.index=[32, 28, 28, (14,'shortcut'), 14, 78, 78, (22,'shortcut'), 20, 118, 118, 20, 118, 118, 30, 158, 158, 30, 158, 158, 30, 158, 158, 58, 314, 314, 58, 316, 316, 58, 314, 314, 58, 316, 316, (88,'shortcut'), 82, 470, 470, 82, 472, 472, 82, 474, 474, 140, 778, 778, 140, 784, 784, 140, 786, 786, (260,'shortcut'), 260, 1026]
         #self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
         ######################################## 40% ############################################
-        #self.index=[32, 20, 20, (10,'shortcut'), 12, 60, 60, (18,'shortcut'), 18, 90, 90, 18, 90, 90, 24, 120, 120, 24, 118, 118, 24, 120, 120, 46, 236, 236, 46, 236, 236, 46, 236, 236, 46, 238, 238, (66,'shortcut'), 64, 354, 354, 64, 354, 354, 64, 356, 356, 108, 586, 586, 108, 588, 588, 108, 588, 588, (196,'shortcut'), 194, 772]
+        #self.index=[32, 24, 24, (12,'shortcut'), 14, 62, 62, (20,'shortcut'), 20, 94, 94, 20, 92, 92, 28, 124, 124, 28, 124, 124, 28, 124, 124, 54, 244, 244, 54, 246, 246, 54, 246, 246, 54, 248, 248, (80,'shortcut'), 68, 366, 366, 68, 366, 366, 68, 372, 372, 122, 596, 596, 122, 608, 608, 122, 612, 612, (200,'shortcut'), 200, 774]
         #self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
         ######################################## 60% ############################################
-        #self.index=[32, 16, 16, (8,'shortcut'), 8, 42, 42, (14,'shortcut'), 14, 62, 62, 14, 62, 62, 18, 82, 82, 18, 82, 82, 18, 84, 84, 38, 162, 162, 38, 162, 162, 38, 162, 162, 38, 164, 164, (50,'shortcut'), 48, 242, 242, 48, 242, 242, 48, 246, 246, 82, 398, 398, 82, 404, 404, 82, 404, 404, (134,'shortcut'), 132, 518]
-        #self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
+        self.index=[32, 20, 20, (10,'shortcut'), 12, 44, 44, (18,'shortcut'), 18, 68, 68, 18, 68, 68, 24, 90, 90, 24, 90, 90, 24, 90, 90, 48, 172, 172, 48, 178, 178, 48, 176, 176, 48, 182, 182, (70,'shortcut'), 56, 260, 260, 56, 262, 262, 56, 268, 268, 102, 414, 414, 102, 432, 432, 102, 438, 438, (142,'shortcut'), 138, 520]
+        self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
         ######################################## 80% ############################################
-        #self.index=[32, 10, 10, (6,'shortcut'), 6, 24, 24, (10,'shortcut'), 10, 34, 34, 10, 36, 36, 14, 46, 46, 14, 46, 46, 14, 48, 48, 28, 88, 88, 28, 88, 88, 28, 88, 88, 28, 90, 90, (36,'shortcut'), 32, 130, 130, 32, 132, 132, 32, 136, 136, 56, 210, 210, 56, 218, 218, 56, 218, 218, (70,'shortcut'), 70, 262]
+        #self.index=[32, 16, 16, (10,'shortcut'), 10, 28, 28, (16,'shortcut'), 16, 42, 42, 16, 42, 42, 22, 56, 56, 22, 56, 56, 22, 56, 56, 42, 102, 102, 42, 110, 110, 42, 106, 106, 42, 114, 114, (62,'shortcut'), 42, 156, 156, 42, 158, 158, 42, 166, 166, 84, 232, 232, 84, 256, 256, 84, 264, 264, (82,'shortcut'), 78, 268]
         #self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
         ######################################## 100% ###########################################
-        self.index=[32, 4, 4, (2,'shortcut'), 4, 6, 6, (8,'shortcut'), 8, 8, 8, 8, 8, 8, 10, 10, 10, 10, 8, 8, 10, 12, 12, 20, 14, 14, 20, 14, 14, 20, 14, 14, 20, 18, 18, (20,'shortcut'), 16, 18, 18, 16, 20, 20, 16, 26, 26, 32, 24, 24, 32, 32, 32, 32, 32, 32, (8,'shortcut'), 8, 8]
-        self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
+        #self.index=[32, 14, 14, (8,'shortcut'), 8, 10, 10, (16,'shortcut'), 16, 16, 16, 16, 16, 16, 20, 22, 22, 20, 22, 22, 20, 22, 22, 38, 32, 32, 38, 40, 40, 38, 38, 38, 38, 46, 46, (54,'shortcut'), 28, 50, 50, 28, 52, 52, 28, 64, 64, 64, 50, 50, 64, 80, 80, 64, 90, 90, (22,'shortcut'), 18, 14]
+        #self.strides_and_short=[(1,True),(1,True),(1,False),(2,False),(1,False),(1,False),(2,False),(1,False),(1,False),(1,False),(1,True),(1,False),(1,False),(2,False),(1,False),(1,False),(1,True)]
         #########################################################################################
 
         super(MobileNetV2, self).__init__()
@@ -161,17 +173,42 @@ class MobileNetV2(nn.Module):
         return nn.Sequential(*layers)
 '''
 
+
+def torch_summarize(model, show_weights=True, show_parameters=True):
+    """Summarizes torch model by showing trainable parameters and weights."""
+    tmpstr = model.__class__.__name__ + ' (\n'
+    for key, module in model._modules.items():
+        # if it contains layers let call it recursively to get params and weights
+        if type(module) in [
+            torch.nn.modules.container.Container,
+            torch.nn.modules.container.Sequential
+        ]:
+            modstr = torch_summarize(module)
+        else:
+            modstr = module.__repr__()
+        modstr = _addindent(modstr, 2)
+
+        params = sum([np.prod(p.size()) for p in module.parameters()])
+        weights = tuple([tuple(p.size()) for p in module.parameters()])
+
+        tmpstr += '  (' + key + '): ' + modstr
+        if show_weights:
+            tmpstr += ', weights={}'.format(weights)
+        if show_parameters:
+            tmpstr +=  ', parameters={}'.format(params)
+        tmpstr += '\n'
+
+    tmpstr = tmpstr + ')'
+    return tmpstr
+
 def test():
+    #2296922, 1613814, 1062062, 611434, 280426, 65762
     net = MobileNetV2()
-    ##print(net)
-    x = torch.randn(1, 3, 32, 32)
+    print(torch_summarize(net))
+    pytorch_total_params = sum(p.numel() for p in net.parameters())
+    print(pytorch_total_params)
+    x = torch.randn(2, 3, 32, 32)
     y = net(x)
-    #g=make_dot(y)
-    #g.view()
-    #print('true')
     print(y.size())
-    pytorch_total_params = sum(p.numel() for p in net.parameters() if p.requires_grad)
-    #Baseline: 2296922, 20%: 1552752, 40%: 947996, 60%: 493046, 80%: 181324, 100%: 16818.
-    #print(pytorch_total_params)
 
 #test()
