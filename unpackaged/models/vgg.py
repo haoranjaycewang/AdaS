@@ -27,17 +27,17 @@ import torch
 import torch.nn as nn
 from torch.nn.modules.module import _addindent
 import numpy as np
-
+from thop import profile
 cfg = {
     'VGG11': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'VGG13': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    #'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'], Original
+    'VGG16': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'], #Original
     ######### Scaled using AdaS baseline RANK, will be trained with StepLR ####
     #'VGG16': [54, 58, 'M', 112, 112, 'M', 220, 224, 222, 'M', 438, 452, 438, 'M', 420, 418, 420, 'M'], #20%
     #'VGG16': [44, 52, 'M', 96, 96, 'M', 184, 192, 188, 'M', 366, 392, 366, 'M', 328, 326, 328, 'M'], #40%
     #'VGG16': [34, 46, 'M', 80, 80, 'M', 148, 160, 154, 'M', 292, 332, 292, 'M', 234, 232, 238, 'M'], #60%
     #'VGG16': [32, 40, 'M', 62, 64, 'M', 114, 128, 120, 'M', 220, 272, 220, 'M', 142, 140, 146, 'M'], #80%
-    'VGG16': [32, 34, 'M', 46, 48, 'M', 78, 96, 86, 'M', 146, 212, 146, 'M', 50, 46, 54, 'M'], #100%
+    #'VGG16': [32, 34, 'M', 46, 48, 'M', 78, 96, 86, 'M', 146, 212, 146, 'M', 50, 46, 54, 'M'], #100%
 
 
     'VGG19': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
@@ -99,10 +99,11 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
 
 def test():
     net = VGG('VGG16')
-    print(torch_summarize(net))
     x = torch.randn(2, 3, 32, 32)
+    macs, params = profile(net, inputs=(x, ))
+    #print(torch_summarize(net)) #old parameter counter
     y = net(x)
     print(y.size())
 
 
-#test()
+test()
