@@ -29,6 +29,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from ptflops import get_model_complexity_info
 
 class ShuffleBlock(nn.Module):
     def __init__(self, groups=2):
@@ -179,7 +180,13 @@ def test():
     net = ShuffleNetV2(net_size=0.5)
     x = torch.randn(3, 3, 32, 32)
     y = net(x)
+
+    macs, params = get_model_complexity_info(net, (3,32,32), as_strings=True,
+                                           print_per_layer_stat=True, verbose=True)
+    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+
     print(y.shape)
 
 
-# test()
+test()
