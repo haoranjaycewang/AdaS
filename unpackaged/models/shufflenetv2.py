@@ -171,7 +171,7 @@ configs = {
         'num_blocks': (3, 7, 3)
     },
     2: {
-        'out_channels': (224, 488, 976, 2048),
+        'out_channels': (244, 488, 976, 2048),
         'num_blocks': (3, 7, 3)
     }
 }
