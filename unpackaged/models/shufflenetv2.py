@@ -61,12 +61,15 @@ class BasicBlock(nn.Module):
         in_channels = int(in_channels * split_ratio)
         self.conv1 = nn.Conv2d(in_channels, in_channels,
                                kernel_size=1, bias=False)
+
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.conv2 = nn.Conv2d(in_channels, in_channels,
                                kernel_size=3, stride=1, padding=1, groups=in_channels, bias=False)
+
         self.bn2 = nn.BatchNorm2d(in_channels)
         self.conv3 = nn.Conv2d(in_channels, in_channels,
                                kernel_size=1, bias=False)
+
         self.bn3 = nn.BatchNorm2d(in_channels)
         self.shuffle = ShuffleBlock()
 
@@ -87,19 +90,27 @@ class DownBlock(nn.Module):
         # left
         self.conv1 = nn.Conv2d(in_channels, in_channels,
                                kernel_size=3, stride=2, padding=1, groups=in_channels, bias=False)
+
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.conv2 = nn.Conv2d(in_channels, mid_channels,
                                kernel_size=1, bias=False)
+
         self.bn2 = nn.BatchNorm2d(mid_channels)
         # right
         self.conv3 = nn.Conv2d(in_channels, mid_channels,
                                kernel_size=1, bias=False)
+
+
         self.bn3 = nn.BatchNorm2d(mid_channels)
         self.conv4 = nn.Conv2d(mid_channels, mid_channels,
                                kernel_size=3, stride=2, padding=1, groups=mid_channels, bias=False)
+
+
         self.bn4 = nn.BatchNorm2d(mid_channels)
         self.conv5 = nn.Conv2d(mid_channels, mid_channels,
                                kernel_size=1, bias=False)
+
+
         self.bn5 = nn.BatchNorm2d(mid_channels)
 
         self.shuffle = ShuffleBlock()
@@ -123,16 +134,31 @@ class ShuffleNetV2(nn.Module):
         super(ShuffleNetV2, self).__init__()
         out_channels = configs[net_size]['out_channels']
         num_blocks = configs[net_size]['num_blocks']
+        #First Scaling
+        #self.in_channels = 24 #Baseline
+        #self.in_channels = 20 #20%
+        #self.in_channels = 18 #40%
+        #self.in_channels = 14 #60%
+        #self.in_channels = 12 #80%
+        self.in_channels = 8 #100%
 
-        self.conv1 = nn.Conv2d(3, 24, kernel_size=3,
+        self.conv1 = nn.Conv2d(3, self.in_channels, kernel_size=3,
                                stride=1, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(24)
-        self.in_channels = 24
+
+        self.bn1 = nn.BatchNorm2d(self.in_channels)
+
+
+
+
         self.layer1 = self._make_layer(out_channels[0], num_blocks[0])
+
         self.layer2 = self._make_layer(out_channels[1], num_blocks[1])
+
         self.layer3 = self._make_layer(out_channels[2], num_blocks[2])
+
         self.conv2 = nn.Conv2d(out_channels[2], out_channels[3],
                                kernel_size=1, stride=1, padding=0, bias=False)
+
         self.bn2 = nn.BatchNorm2d(out_channels[3])
         self.linear = nn.Linear(out_channels[3], num_classes)
 
@@ -171,7 +197,12 @@ configs = {
         'num_blocks': (3, 7, 3)
     },
     2: {
-        'out_channels': (244, 488, 976, 2048),
+        #'out_channels': (244, 488, 976, 2048), #Baseline
+        #'out_channels': (210, 426, 836, 1648), #20%
+        #'out_channels': (174, 362, 694, 1248), #40%
+        #'out_channels': (140, 300, 554, 846), #60%
+        #'out_channels': (104, 236, 414, 446), #80%
+        'out_channels': (70, 174, 272, 46), #100%
         'num_blocks': (3, 7, 3)
     }
 }
