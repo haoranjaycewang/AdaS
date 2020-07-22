@@ -32,7 +32,7 @@ import torch
 def VBMF(Y, cacb, sigma2=None, H=None):
     """Implementation of the analytical solution to Variational Bayes Matrix Factorization.
 
-    This function can be used to calculate the analytical solution to VBMF. 
+    This function can be used to calculate the analytical solution to VBMF.
     This is based on the paper and MatLab code by Nakajima et al.:
     "Global analytic solution of fully-observed variational Bayesian matrix factorization."
 
@@ -59,7 +59,7 @@ def VBMF(Y, cacb, sigma2=None, H=None):
     Returns
     -------
     U : numpy-array
-        Left-singular vectors. 
+        Left-singular vectors.
 
     S : numpy-array
         Diagonal matrix of singular values.
@@ -106,7 +106,7 @@ def VBMF(Y, cacb, sigma2=None, H=None):
         sigma2_opt = minimize_scalar(VBsigma2, args=(L, M, cacb, s, residual), bounds=[
                                      lower_bound, upper_bound], method='Bounded')
         sigma2 = sigma2_opt.x
-        #print("Estimated sigma2: ", sigma2)
+        
 
     # Threshold gamma term
     # Formula above (21) from [1]
@@ -182,7 +182,7 @@ def VBsigma2(sigma2, L, M, cacb, s, residual):
 def EVBMF(Y, sigma2=None, H=None):
     """Implementation of the analytical solution to Empirical Variational Bayes Matrix Factorization.
 
-    This function can be used to calculate the analytical solution to empirical VBMF. 
+    This function can be used to calculate the analytical solution to empirical VBMF.
     This is based on the paper and MatLab code by Nakajima et al.:
     "Global analytic solution of fully-observed variational Bayesian matrix factorization."
 
@@ -205,7 +205,7 @@ def EVBMF(Y, sigma2=None, H=None):
     Returns
     -------
     U : numpy-array
-        Left-singular vectors. 
+        Left-singular vectors.
 
     S : numpy-array
         Diagonal matrix of singular values.
@@ -221,7 +221,7 @@ def EVBMF(Y, sigma2=None, H=None):
     ----------
     .. [1] Nakajima, Shinichi, et al. "Global analytic solution of fully-observed variational Bayesian matrix factorization." Journal of Machine Learning Research 14.Jan (2013): 1-37.
 
-    .. [2] Nakajima, Shinichi, et al. "Perfect dimensionality recovery by variational Bayesian PCA." Advances in Neural Information Processing Systems. 2012.     
+    .. [2] Nakajima, Shinichi, et al. "Perfect dimensionality recovery by variational Bayesian PCA." Advances in Neural Information Processing Systems. 2012.
     """
     L, M = Y.shape  # has to be L<=M
 
@@ -260,7 +260,6 @@ def EVBMF(Y, sigma2=None, H=None):
                                      lower_bound.cpu().numpy(), upper_bound.cpu().numpy()], method='Bounded')
         sigma2 = sigma2_opt.x
 
-        # print(sigma2)
 
     # Threshold gamma term
     threshold = np.sqrt(M*sigma2*(1+tauubar)*(1+alpha/tauubar))
@@ -269,6 +268,7 @@ def EVBMF(Y, sigma2=None, H=None):
     # Formula (15) from [2]
     d = (s[:pos]/2)*(1-(L+M)*sigma2/s[:pos]**2 + torch.sqrt((1 -
                                                              (L+M)*sigma2/s[:pos]**2)**2 - 4*L*M*sigma2**2/s[:pos]**4))
+
 
     return U[:, :pos], torch.diag(d), V[:, :pos]
 

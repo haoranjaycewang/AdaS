@@ -136,6 +136,7 @@ class Metrics():
                 output_channel_rank.append(
                     S_approx.shape[0] / tensor_size[0])
                 low_rank_eigen = torch.diag(S_approx).data.cpu().numpy()
+                
                 low_rank_eigen = low_rank_eigen ** self.p
                 if len(low_rank_eigen) != 0:
                     output_channel_condition.append(

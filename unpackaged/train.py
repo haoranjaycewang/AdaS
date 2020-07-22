@@ -407,8 +407,7 @@ def epoch_iteration(train_loader, test_loader, epoch: int,
     test_loss, test_accuracy = test_main(test_loader, epoch, device)
     return train_loss / (batch_idx + 1), 100. * correct / total, test_loss, test_accuracy
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = ArgumentParser(description=__doc__)
     args(parser)
     args = parser.parse_args()
