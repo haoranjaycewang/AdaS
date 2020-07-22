@@ -38,7 +38,7 @@ from models.preact_resnet import PreActResNet18
 from models.mobilenet import MobileNet
 from models.mobilenetv2 import MobileNetV2
 from models.efficientnet import EfficientNetB0
-from models.SqueezeNet import SqueezeNet
+
 
 
 def get_net(network: str, num_classes) -> torch.nn.Module:
@@ -55,5 +55,4 @@ def get_net(network: str, num_classes) -> torch.nn.Module:
         SENet18(num_classes=num_classes) if network == 'SENet18' else \
         ShuffleNetV2(2, num_classes=num_classes) if network == 'ShuffleNetV2' else \
         EfficientNetB0(
-            num_classes=num_classes) if network == 'EfficientNetB0' else \
-        SqueezeNet(num_classes=num_classes) if network == 'SqueezeNet' else None
+            num_classes=num_classes) if network == 'EfficientNetB0' else None
